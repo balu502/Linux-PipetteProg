@@ -5,6 +5,7 @@
 //#include <ftdi.h>
 #include <QThread>
 #include <QDebug>
+#include <QFile>
 //#include "can_comm.h"
 
 #define MSLEEP_VALUE    20
@@ -192,4 +193,33 @@ QString* CommObject::CommTR(QString* Message, bool emitMessage)
 
     if(emitMessage) emit message(Message->simplified() + " / " + received.simplified());
     return &received;
+}
+
+// test all CAN ch from 30 s and crate can_id.dat file with ID
+void CommObject::CANtest(void)
+{
+  int chan,beginID=2,endID=15;
+  //QString received;
+  //char buffer[80];
+  QFile data("can_id.dat");
+  if(!data.open(QFile::WriteOnly)) {
+    return;
+  }
+  QTextStream out(&data);
+  qDebug()<<"Begin get CAN IDs";
+  for(int i=beginID;i<=endID;i++){
+    chan = CAN_OpenChan(i);
+    //qDebug()<<"CAN IDs"<<i<<chan;
+    if(chan<0) continue;
+    //strcpy(buffer,"fver");
+    //int ret = CAN_ClientChan(chan, buffer, 80, 5);
+    //if (ret>0) received = QString(buffer);
+    //else
+    //  received="Unknown";
+    out << "ID: " << i<<"\r\n";
+    CAN_CloseChan(chan);
+  }
+  qDebug()<<"End get CAN IDs";
+  data.close();
+
 }

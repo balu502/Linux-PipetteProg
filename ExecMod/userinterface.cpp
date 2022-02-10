@@ -79,11 +79,12 @@ UserInterface::~UserInterface(void)
 {
 }
 
-bool UserInterface::init(QString scrDir,QStringList scrExMask)
+bool UserInterface::init(QString scrDir, QString tstDir, QStringList scrExMask)
 {
 
     selected_program_index = -1;
 	scriptDir=scrDir;
+    testsDir=tstDir;
 	scriptExMask=scrExMask;
     QDir dir(scriptDir);
     scriptFileList=dir.entryList(scriptExMask,QDir::Files,QDir::Name);
@@ -155,11 +156,11 @@ void UserInterface::scanButtons(void)
 // display current state
 void UserInterface::displayUpdate(void)
 {
-    static int screensaver_enable_counter = 0;
+    static int screensaver_enable_counter = 0,screensaverAM_enable_counter = 0;
     if(canRefresh==0) return;
     if(screen == IDLE)
     {
-        if(screensaver_enable_counter++ > SCREENSAVER_ENABLE_TIME)
+        if(screensaver_enable_counter++ > SCREENSAVER_ENABLE_TIME) // ~20 s
         {
             screensaver_enable_counter = 0;
             REAL_CONSTANT = -0.4;
@@ -168,6 +169,17 @@ void UserInterface::displayUpdate(void)
         }
     }
     else screensaver_enable_counter = 0;
+    if(screen==MESSAGE)
+    {
+        if(screensaverAM_enable_counter++ > SCREENSAVER_ENABLE_TIME)
+        {
+            screensaverAM_enable_counter = 0;
+            REAL_CONSTANT = -0.4;
+            IMG_CONSTANT = +0.6;
+            screen = SCREENSAVERAM;
+        }
+    }
+    else screensaverAM_enable_counter = 0;
 
     if(status != DBS_STATUS_STOPPED & screen != OPTIONS_LIST
     && screen != ABORT_CONFIRM) screen = EXECUTE_INFO;
@@ -177,11 +189,12 @@ void UserInterface::displayUpdate(void)
     else if(screen == PROG_LIST) programList();
     else if(screen == TOOLS_LIST) toolsList();
     else if(screen == OPTIONS_LIST) optionList(); //show options list in process run of script
-    else if(screen == EXECUTE_INFO) executeInfo(); // rin script state
+    else if(screen == EXECUTE_INFO) executeInfo(); // run script state
     else if(screen == MESSAGE) messageScreen();
     else if(screen == SHORTMESSAGE) shortMessageScreen();
     else if(screen == ABORT_CONFIRM) abortConfirmScreen();
     else if(screen == SCREENSAVER) screensaver();
+    else if(screen == SCREENSAVERAM) screensaverAM(); //screensaver after measure
 
     display.outBuffer();
 }
@@ -241,7 +254,7 @@ void UserInterface::idle(void)
 
     display.setFont(suFont_Font_View_Times_New_Roman_Height_26[0],
                     sizeof(suFont_Font_View_Times_New_Roman_Height_26[0]), 4);
-    display.text(0, -5, "dtStream");
+    display.text(0, -5, "DTstream");
 
     drawSN();
     drawIP();
@@ -262,7 +275,7 @@ void UserInterface::idle(void)
 	if(button == 1 && button_enabled[1])
     {
         disableButtons();
-        gotoToolsList();
+        gotoTestsList();
     }
     else if(button == 2 && button_enabled[2])
     {
@@ -638,6 +651,39 @@ void UserInterface::screensaver(void)
     }
 }
 
+// screensaver after message on screen
+void UserInterface::screensaverAM(void)
+{
+    static int dir_x = 2, dir_y = 1;
+    static int pos_x = 0, pos_y = 0;
+
+    QString datetime = message_screen_header+" "+message_screen_text;
+
+    display.setPen(0x00);
+    display.fill();
+    display.setFont(suFont_Font_View_Times_New_Roman_Height_26[0],
+                    sizeof(suFont_Font_View_Times_New_Roman_Height_26[0]), 4);
+
+    pos_x += dir_x;
+    pos_y += dir_y;
+    if(pos_x < 0) dir_x = 2;
+    if(pos_y < -2) dir_y = 1;
+    if(pos_x/2 > 256 - display.textWidth(datetime.toAscii().data())) dir_x = -2;
+    if(pos_y/2 > 64 - 22) dir_y = -1;
+
+
+    display.setPen(0x22);
+    display.text(pos_x/2, pos_y/2, datetime.toAscii().data());
+
+    if(button >= 0)
+    {
+        disableButtons();
+        slotReInitDisplay();
+        screen = MESSAGE;
+    }
+}
+
+
 void UserInterface::drawTime(void)
 {
     QString datetime = QDateTime::currentDateTime().toString("h:mm:ss").rightJustified(8, ' ');
@@ -718,8 +764,8 @@ void UserInterface::drawProgramList(void)
     display.setPen(0xff);
     display.setFont(suFont_Font_Times_New_Roman_Height_15[0],
                     sizeof(suFont_Font_Times_New_Roman_Height_15[0]), 2);
-    QDir dir(scriptDir);
-    scriptFileList=dir.entryList(scriptExMask,QDir::Files,QDir::Name);
+    //QDir dir(scriptDir);
+    //scriptFileList=dir.entryList(scriptExMask,QDir::Files,QDir::Name);
     int count = scriptFileList.count();
     QString ls;
     int indx;
@@ -821,6 +867,35 @@ void UserInterface::gotoProgramList(void)
     selected_program_index = -1;
     QDir dir(scriptDir);
     scriptFileList=dir.entryList(scriptExMask,QDir::Files,QDir::Name);
+    int count = scriptFileList.count();
+
+    if(count && selected_program_index == -1) selected_program_index = 0;
+
+    int cursor_x = PROG_LIST_CURSOR_X;
+    int cursor_y;
+    if(count*PROG_LIST_LINES_SPACE < PROG_LIST_VERTICAL_PIXEL_COUNT)
+        cursor_y = selected_program_index*PROG_LIST_LINES_SPACE;
+    else
+    {
+        if(count != 1) cursor_y = selected_program_index*(PROG_LIST_VERTICAL_PIXEL_COUNT - 1 - PROG_LIST_LINES_SPACE)/(count-1);
+        else cursor_y = 0;
+    }
+    initMovingPoint(&cursor_pos, cursor_x, cursor_y, 10);
+
+    int prog_x = cursor_x + 2;
+    int prog_y = cursor_y - selected_program_index * PROG_LIST_LINES_SPACE;
+    initMovingPoint(&prog_list_pos, prog_x, prog_y, 10);
+
+    screen = PROG_LIST;
+}
+
+// prepare procedure before display scripts list
+void UserInterface::gotoTestsList(void)
+{
+    selected_program_index = -1;
+    QDir dir(testsDir);
+    scriptFileList=dir.entryList(scriptExMask,QDir::Files,QDir::Name);
+    qDebug()<<scriptFileList;
     int count = scriptFileList.count();
 
     if(count && selected_program_index == -1) selected_program_index = 0;

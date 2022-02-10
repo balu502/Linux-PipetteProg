@@ -12,6 +12,7 @@ public:
     void load(void);
     QString devicePort;
     QString scriptsDirName;
+    QString testsScriptsDirName;
     QString pythonExMask,jsExMask;
     QString bcScriptProcFile;
     QString logicLogFN;
@@ -19,7 +20,7 @@ public:
     //QString BSManufacturer;
     //QString BSNames;
     QStringList scanners;
-    bool enableLog,enableSound,enableLight,enableSig,disablePauseOnCoverUP;
+    bool enableLog,enableSound,enableLight,enableSig,disablePauseOnCoverUP,enableCANtest;
     int uvOffInterval;
 };
 

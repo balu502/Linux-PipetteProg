@@ -26,6 +26,7 @@ CommThread::CommThread(void)
     connect(comm_object, SIGNAL(commError()), this, SLOT(trError()));
     connect(comm_object, SIGNAL(message(QString)), this, SIGNAL(statusMessage(QString)));
     connect(comm_object, SIGNAL(controlLight(int)),this, SLOT( setLightReq(int)));
+
     scriptRun=false;
     lightEn=true;
     sigEn=true;

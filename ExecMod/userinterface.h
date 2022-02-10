@@ -25,7 +25,7 @@ public:
     explicit UserInterface(QObject *parent = 0);
     ~UserInterface(void);
 
-    bool init(QString scrDir, QStringList scrExMask);
+    bool init(QString scrDir, QString tstDir, QStringList scrExMask);
     void deinit(void);
 
     void scanButtons(void);
@@ -75,6 +75,7 @@ private:
     void shortMessageScreen(void);
     void abortConfirmScreen(void);
     void screensaver(void);
+    void screensaverAM(void);
 
 
     void drawTime(void);
@@ -93,6 +94,7 @@ private:
     void drawProgressBar(void);
 
     void gotoProgramList(void);
+    void gotoTestsList(void);
 	void gotoToolsList(void);
     void gotoOptionsList(void);
     void disableButtons(void);
@@ -109,7 +111,7 @@ private:
     float REAL_CONSTANT;//-0.8;//0.285;
     float IMG_CONSTANT;//0.156;//0.01;
 
-    enum {INTRO=0, IDLE=1, PROG_LIST=2, EXECUTE_INFO=3, MESSAGE=4, ABORT_CONFIRM=5, SCREENSAVER=6,TOOLS_LIST=7,SHORTMESSAGE=8,OPTIONS_LIST=9} screen;
+    enum {INTRO=0, IDLE=1, PROG_LIST=2, EXECUTE_INFO=3, MESSAGE=4, ABORT_CONFIRM=5, SCREENSAVER=6,TOOLS_LIST=7,SHORTMESSAGE=8,OPTIONS_LIST=9,SCREENSAVERAM=10} screen;
 #ifndef i386
     Display display;
 #endif
@@ -117,6 +119,7 @@ private:
     QString message_screen_text;
     QString shortMsg;
     QString scriptDir; // string with script directory
+    QString testsDir; // string with tests script directory
     QStringList scriptExMask; //list with mask for extentions of script file
     int button;
 

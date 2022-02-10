@@ -40,7 +40,7 @@ UIThread::UIThread(Settings *settings) :
     user_interface = new UserInterface(this);
 
     connect(user_interface, SIGNAL(message(QString)), this, SIGNAL(message(QString)));
-    user_interface->init(settings->scriptsDirName, (QStringList()<<"*."+settings->pythonExMask<<"*."+settings->jsExMask));
+    user_interface->init(settings->scriptsDirName, settings->testsScriptsDirName,(QStringList()<<"*."+settings->pythonExMask<<"*."+settings->jsExMask));
     start(QThread::NormalPriority);
 }
 
@@ -100,7 +100,7 @@ void UIThread::setProgress(int value)
 // set status from script (0 - run, 1 - pause)
 void UIThread::setExec(int value)
 {
-    mutex.lock();qDebug()<<"RP"<<value;
+    mutex.lock();qDebug()<<"setExec (Run/pause)"<<value;
     user_interface->statusExecute = value;
     mutex.unlock();
 }

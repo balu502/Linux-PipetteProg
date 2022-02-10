@@ -56,6 +56,7 @@ public:
     void setLedVal(bool);
     void setPauseCoverUPEn(int val) {pauseCoverUPEn=val;}
     void setScrRun(bool val) {scrRun=val;}
+    void CANtest(void);
 //    typedef int (CommObject::*PTR_FUN)(unsigned char,unsigned char);
 //    PTR_FUN pTest;
 

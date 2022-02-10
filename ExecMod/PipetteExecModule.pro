@@ -37,7 +37,7 @@ CONFIG   -= app_bundle
 
 TARGET = ExecMod
 target.files = TARGET
-target.path = /data/CameraPs
+target.path = /data/ExecPS
 INSTALLS += target
 export(INSTALLS)
 TEMPLATE = app

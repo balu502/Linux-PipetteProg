@@ -35,7 +35,7 @@ ProgramExecuteThread::ProgramExecuteThread(void)
 
     bar_scanner = new CodeScanObject(this,&settings);
     ui_thread = new UIThread(&settings);
-
+    if(settings.enableCANtest) device->comm_object->CANtest();
 	abort = false;
 	pause = false;
 	is_launched = false;
@@ -48,7 +48,7 @@ ProgramExecuteThread::ProgramExecuteThread(void)
 
 	pressResumeButton=false;
 
-       connect(device, SIGNAL(commError(ProgramFinishStatus::Detail)), this, SLOT(deviceError(ProgramFinishStatus::Detail)));
+    connect(device, SIGNAL(commError(ProgramFinishStatus::Detail)), this, SLOT(deviceError(ProgramFinishStatus::Detail)));
 
 
     connect(bar_scanner, SIGNAL(deviceFound(QString)), this, SLOT(barscannerFound(QString)));
